@@ -33,6 +33,7 @@ def generateRecommendations(password):
     #Analysis Flags
     has_upper = any(char.isupper() for char in password)
     has_special = any(char in special for char in password)
+    has_digit = any(char.isdigit() for char in password)
 
     status = checkLength(password)
     if status == 3: #Too short
@@ -48,7 +49,10 @@ def generateRecommendations(password):
     if not has_special:
         print("[WARNING] Password lacks special characters: \n")
         print("\tSpecial characters add complexity and make passwords more secure against brute-force attacks.\n")
-    
+    if not has_digit:
+        print("[WARNING] Password lacks digits:")
+        print("\tPasswords with digits add numerical complexity and are harder to guess.\n")
+
     if(status == 2): #Truncate overly long passwords
         password = password[:25]
         print("[INFO] Your password has been truncated to 25 characters for practical recommendations. \n")
@@ -66,9 +70,11 @@ def generateRecommendations(password):
 
         if not has_upper:
             new_password.append(random.choice(upper))
-
-        special_count = random.randint(3,6)
-        new_password += random.choices(special, k=special_count)
+        if not has_special:
+            special_count = random.randint(3,6)
+            new_password += random.choices(special, k=special_count)
+        if not has_digit:
+            new_password.append(random.choice(digits))
 
         while(len(new_password) < new_length):
             new_password.append(random.choice(all_chars))
@@ -78,12 +84,39 @@ def generateRecommendations(password):
     
     return recommendations
 
+def evaluatePassword(password: str):
+    upper = string.ascii_uppercase
+    digits = string.digits
+    special = string.punctuation    
+
+    has_upper = any(char.isupper() for char in password)
+    has_special = any(char in special for char in password)
+    has_digit = any(char.isdigit() for char in password)
+    status = checkLength(password)
+
+    # Check if the password meets all requirements
+    if status == 1 and has_upper and has_special and has_digit:
+        print("[SUCCESS] Your password meets all the requirements!")
+        print("\t- It is of valid length.")
+        print("\t- It contains uppercase letters, digits, and special characters.")
+        print("\nWould you like to generate some additional strong passwords? (y/n)")
+        choice = input().strip().lower()
+        if choice == 'y':
+            recommendations = generateRecommendations(password)
+            print("\nHere are some recommended strong passwords: ")
+            for idx, rec in enumerate(recommendations, start=1):
+                print(f"{idx}. {rec}")
+        else:
+            print("Great! Your password is strong enough. You can move on!")
+    else:
+        print("[FAILURE] Your password does not meet all requirements. Here's why:")
+        generateRecommendations(password)
+
 
 if __name__ == "__main__":
     user_password = input("Enter your password: ")
     recommendations = generateRecommendations(user_password)
-
-    print("\nHere are some recommended stronger passwords: ")
-    for idx, rec in enumerate(recommendations, start=1):
-        print(f"{idx}. {rec}")
+    print("Evaluating Password->\n")
+    evaluatePassword(user_password)
+    print("Done Evaluating Password<-\n")
 
