@@ -1,42 +1,47 @@
 import string
 import random
+import json
+import os
+from cryptography.fernet import Fernet
 from nltk.corpus import words
-#Create a function to evaluate the password, length, capital letters, and atleast 2 special characters
-
-#Create a function that returns recommendations to make the password stronger
-
-#Shows password being used again John The Ripper? Be able to show the user
-#that there password is either easy to be cracked or hard to crack
 
 
+def load_or_generate_key():
+    if os.path.exists("secret.key"):
+        with open("secret.key", "rb") as key_file:
+            key = key_file.read()
+    else:
+        key = Fernet.generate_key()
+        with open("secret.key", "wb") as key_file:
+            key_file.write(key)
+    return key
+def encrypt_password(password: str, key: bytes) -> str:
+    f = Fernet(key)
+    encrypted_password = f.encrypt(password.encode())
+    return encrypted_password.decode()
 
-#Check the length of the password
+def decrypt_password(encrypted_password: str, key: bytes) -> str:
+
 def checkLength(password: str) -> int:
     if len(password) < 8:
-        return 3    #Password is too short
+        return 3    # Password is too short
     elif len(password) > 30:
-        return 2    #Password is too long
-    return 1    #Valid length
+        return 2    # Password is too long
+    return 1    # Valid length
+
 def generateRecommendations(password):
-    #TODO:
-    #Rework entirely, explain why their password is weak, return relateed passwords that are strong
-    #Take the password, review it, find what it is missing, generate random combos of characters to add 
-    #into the password. Generate 3 different ones, return them in a vector of strings or maybe a stack,
-    
-    #Character Sets
-    word_list = words.words() #load word list
+    word_list = words.words()  # load word list
     upper = string.ascii_uppercase
     digits = string.digits
     special = string.punctuation
     all_chars = upper + digits
 
-    #Analysis Flags
     has_upper = any(char.isupper() for char in password)
     has_special = any(char in special for char in password)
     has_digit = any(char.isdigit() for char in password)
 
     status = checkLength(password)
-    if status == 3: #Too short
+    if status == 3:  # Too short
         print("[ERROR] Password too short: \n")
         print("\tShort passwords are inherently less secure. Each additional character in a password exponentially increases the number of possible combinations,\n thereby enhancing its security. Short passwords, often less than eight characters, are simply too easy to crack.\n")
     elif status == 2:
@@ -53,17 +58,16 @@ def generateRecommendations(password):
         print("[WARNING] Password lacks digits:")
         print("\tPasswords with digits add numerical complexity and are harder to guess.\n")
 
-    if(status == 2): #Truncate overly long passwords
+    if(status == 2):  # Truncate overly long passwords
         password = password[:25]
         print("[INFO] Your password has been truncated to 25 characters for practical recommendations. \n")
         print(f"[MESSAGE] This is your password shortened: {password}")
 
-
-    new_length = max(len(password), 12, random.randint(12,20)) #Ensure atleast 12+ characters
+    new_length = max(len(password), 12, random.randint(12, 20))  # Ensure at least 12+ characters
     recommendations = []
 
     for _ in range(3):
-        #start with original password
+        # Start with original password
         new_password = list(password)
         word = random.choice(word_list)
         new_password.append(word)
@@ -71,7 +75,7 @@ def generateRecommendations(password):
         if not has_upper:
             new_password.append(random.choice(upper))
         if not has_special:
-            special_count = random.randint(3,6)
+            special_count = random.randint(3, 6)
             new_password += random.choices(special, k=special_count)
         if not has_digit:
             new_password.append(random.choice(digits))
@@ -110,13 +114,75 @@ def evaluatePassword(password: str):
             print("Great! Your password is strong enough. You can move on!")
     else:
         print("[FAILURE] Your password does not meet all requirements. Here's why:")
-        generateRecommendations(password)
+        recommendations = generateRecommendations(password)  # Always generate recommendations even on failure
+        print("\nHere are some recommended strong passwords: ")
+        for idx, rec in enumerate(recommendations, start=1):
+            print(f"{idx}. {rec}")
+
+class passwordManager:
+    def __init__(self, key):
+    
+    def load_passwords(self):
+
+    def save_passwords(self):
+
+    def add_password(self):
+
+    def get_password(self, service: str):
+
+    def delete_password(self, service: str):
+
+    def list_passwords(self):
+
+    def evaluate_password(self):
+
+
+
+
+def main():
+    key = load_or_generate_key()
+    pm = passwordManager(key)
+
+    while True:
+        print("\nPassword Manager: ")
+        print("1. Add a new password.")
+        print("2. Retrieve a password")
+        print("3. Delete a password")
+        print("4. List all passwords")
+        print("5. Generate password recommendations")
+        print("6. Evaluate Password")
+        print("7. Exit")
+
+        choice = input("Enter your choice: ").strip()
+
+        if choice == 1:
+            service = input("Enter the service name (e.g., Facebook): ").strip()
+            username = input("Enter the username: ").strip()
+            password = input("Enter the password: ").strip()
+            pm.add_password(service, username, password)
+        elif choice == 2:
+            service = input("Enter the service name (e.g., Facebook): ").strip()
+            print(pm.get_password(service))
+        elif choice == 3:
+            service = input("Enter the service name(e.g., Facebook) over the password you want to delete: ").strip()
+            pm.delete_password(service)
+        elif choice == 4:
+            print(pm.list_passwords())
+        elif choice == 5:
+            password = input("Enter your password to generate recommendations: ").strip()
+            recommendations = generateRecommendations(password)
+            print("\nHere are some recommended strong passwords: ")
+            for idx, rec in enumerate(recommendations, start = 1):
+                print(f"{idx}, {rec}")
+        elif choice == 6:
+            password = input("Enter your password to be evaluated: ").strip()
+            pm.evaluate_password(password)
+        elif choice == 7:
+            print("Exiting Password Manager.")
+            break
+        else:
+            print("Invalid Choice. Please try again.")
 
 
 if __name__ == "__main__":
-    user_password = input("Enter your password: ")
-    recommendations = generateRecommendations(user_password)
-    print("Evaluating Password->\n")
-    evaluatePassword(user_password)
-    print("Done Evaluating Password<-\n")
-
+    main()
