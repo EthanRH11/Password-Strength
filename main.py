@@ -2,6 +2,7 @@ import string
 import random
 import json
 import os
+import re
 from cryptography.fernet import Fernet
 from nltk.corpus import words
 
@@ -170,10 +171,43 @@ class passwordManager:
             return "No passwords stored."
         return "\n".join([f"Service: {service}" for service in self.passwords])
         
-    #def evaluate_password(self):
+    def evaluate_password(self, service: str) -> float:
+        if service not in self.passwords:
+            print(f"No password found for service: {service}")
+            return 0.0
+        
+        encrypted_password = self.passwords[service]["password"]
+        password = decrypt_password(encrypted_password, self.key)
 
+        score = 0.0
 
+        length = len(password)
+        if 8 <= length < 12:
+            score += 1
+        elif 12 <= length < 24:
+            score += 2
+        elif 24 <= length <= 30:
+            score += 3
+        
+        special_chars = len(re.findall(r'[{}\[\]!@#$%^&*()-=_+/.,?><;:]', password))
+        if 1 <= special_chars <= 2:
+            score += 1
+        elif special_chars > 2:
+            score += 2
 
+        uppercase_letters = sum(1 for char in password if char.isupper())
+        if 1 <= uppercase_letters <= 2:
+            score += 1
+        elif uppercase_letters > 2:
+            score += 2
+        
+        if score == 0:
+            print(f"Your score was {score}. You need to create a stronger password.")
+        elif 1 <= score <= 5:
+            print(f"Your score was {score}. Your password could be stronger.")
+        elif score >= 6:
+            print(f"Your score was {score}. You password is strong.")
+        
 
 def main():
     key = load_or_generate_key()
@@ -210,10 +244,10 @@ def main():
                 recommendations = generateRecommendations(password)
                 print("\nHere are some recommended strong passwords: ")
                 for idx, rec in enumerate(recommendations, start = 1):
-                    print(f"{idx}, {rec}")
+                    print(f"{idx}: {rec}")
             case "6":
-                password = input("Enter your password to be evaluated: ").strip()
-                pm.evaluate_password(password)
+                servicechoice = input("Enter the services password you want evaluated: ").strip()
+                pm.evaluate_password(servicechoice)
             case "7":
                 print("Exiting Password Manager.")
                 break
