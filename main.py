@@ -18,9 +18,12 @@ def load_or_generate_key():
 def encrypt_password(password: str, key: bytes) -> str:
     f = Fernet(key)
     encrypted_password = f.encrypt(password.encode())
-    return encrypted_password.decode()
+    return encrypted_password.decode('utf-8')
 
 def decrypt_password(encrypted_password: str, key: bytes) -> str:
+    f = Fernet(key)
+    decrypted_password = f.decrypt(encrypted_password.encode())
+    return decrypted_password.decode('utf-8')
 
 def checkLength(password: str) -> int:
     if len(password) < 8:
@@ -121,20 +124,53 @@ def evaluatePassword(password: str):
 
 class passwordManager:
     def __init__(self, key):
-    
+        self.key = key
+        self.passwords_file = "passwords.json"
+        self.load_passwords()
+
     def load_passwords(self):
+        if os.path.exists(self.passwords_file):
+            with open(self.passwords_file, 'r') as file:
+                self.passwords = json.load(file)
+        else:
+            self.passwords = {}
 
     def save_passwords(self):
-
-    def add_password(self):
+        with open(self.passwords_file, 'w') as file:
+            json.dump(self.passwords, file)
+        
+    def add_password(self, service, username, password):
+        encrypted_password = encrypt_password(password, self.key)
+        self.passwords[service] = {
+            "username": username,
+            "password": encrypted_password
+        }
+        self.save_passwords()
+        print(f"Password for {service} added successfully.")
 
     def get_password(self, service: str):
-
+        if service in self.passwords:
+            username = self.passwords[service]["username"]
+            encrypted_password = self.passwords[service]["password"]
+            decrypted_password = decrypt_password(encrypted_password, self.key)
+            return f"Service: {service}\nUsername: {username}\nPassword: {decrypted_password}"
+        else:
+            return f"No password found for service: {service}"
     def delete_password(self, service: str):
+        if service in self.passwords:
+            del self.passwords[service]
+            self.save_passwords()
+            print(f"Password for {service} deleted successfully.")
+        else:
+            print(f"No password for {service}.")
+        
 
     def list_passwords(self):
-
-    def evaluate_password(self):
+        if not self.passwords:
+            return "No passwords stored."
+        return "\n".join([f"Service: {service}" for service in self.passwords])
+        
+    #def evaluate_password(self):
 
 
 
@@ -154,34 +190,35 @@ def main():
         print("7. Exit")
 
         choice = input("Enter your choice: ").strip()
+        match choice:
 
-        if choice == 1:
-            service = input("Enter the service name (e.g., Facebook): ").strip()
-            username = input("Enter the username: ").strip()
-            password = input("Enter the password: ").strip()
-            pm.add_password(service, username, password)
-        elif choice == 2:
-            service = input("Enter the service name (e.g., Facebook): ").strip()
-            print(pm.get_password(service))
-        elif choice == 3:
-            service = input("Enter the service name(e.g., Facebook) over the password you want to delete: ").strip()
-            pm.delete_password(service)
-        elif choice == 4:
-            print(pm.list_passwords())
-        elif choice == 5:
-            password = input("Enter your password to generate recommendations: ").strip()
-            recommendations = generateRecommendations(password)
-            print("\nHere are some recommended strong passwords: ")
-            for idx, rec in enumerate(recommendations, start = 1):
-                print(f"{idx}, {rec}")
-        elif choice == 6:
-            password = input("Enter your password to be evaluated: ").strip()
-            pm.evaluate_password(password)
-        elif choice == 7:
-            print("Exiting Password Manager.")
-            break
-        else:
-            print("Invalid Choice. Please try again.")
+            case "1":
+                service = input("Enter the service name (e.g., Facebook): ").strip()
+                username = input("Enter the username: ").strip()
+                password = input("Enter the password: ").strip()
+                pm.add_password(service, username, password)
+            case "2":
+                service = input("Enter the service name (e.g., Facebook): ").strip()
+                print(pm.get_password(service))
+            case "3":
+                service = input("Enter the service name(e.g., Facebook) over the password you want to delete: ").strip()
+                pm.delete_password(service)
+            case "4":
+                print(pm.list_passwords())
+            case "5":
+                password = input("Enter your password to generate recommendations: ").strip()
+                recommendations = generateRecommendations(password)
+                print("\nHere are some recommended strong passwords: ")
+                for idx, rec in enumerate(recommendations, start = 1):
+                    print(f"{idx}, {rec}")
+            case "6":
+                password = input("Enter your password to be evaluated: ").strip()
+                pm.evaluate_password(password)
+            case "7":
+                print("Exiting Password Manager.")
+                break
+            case default:
+                print("Invalid Choice. Please try again.")
 
 
 if __name__ == "__main__":
