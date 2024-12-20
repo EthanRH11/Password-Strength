@@ -6,7 +6,6 @@
 
 - [About](#about)
 - [Features](#features)
-- [Installation](#installation)
 - [Usage](#usage)
 - [Current Status](#current-status)
 - [License](#license)
@@ -20,15 +19,7 @@ The Password Strength Project is aimed at improving password security by helping
 - **Password Strength Evaluation**: Analyzes passwords based on common criteria like length, complexity (use of numbers, symbols, uppercase letters), and dictionary word checks.
 - **Password Generation**: Generates strong random passwords based on user-defined criteria such as length and character set.
 - **Password Storage**: Currently allows for storing passwords securely, though this feature is still under development and will be expanded in future updates.
-
-## Installation
-
-This project is still under development and is not yet ready for installation or cloning. However, future installation steps will be outlined here once the project is stable and usable.
-
-1. Clone the repository (future step).
-2. Compile the project using a C++ compiler.
-3. Configure the password storage functionality (will be detailed when it's ready).
-
+  
 ## Usage
 
 Currently, the project offers the following functionality:
